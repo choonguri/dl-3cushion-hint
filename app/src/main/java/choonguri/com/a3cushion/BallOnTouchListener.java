@@ -1,5 +1,7 @@
 package choonguri.com.a3cushion;
 
+import android.graphics.RectF;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -11,41 +13,44 @@ import android.widget.RelativeLayout;
 
 public class BallOnTouchListener implements View.OnTouchListener {
 
-    private final RelativeLayout parentLayout;
-    private int xDelta;
-    private int yDelta;
+    private RelativeLayout parentLayout;
 
-    public BallOnTouchListener(RelativeLayout parentLayout) {
+    private float xDelta;
+    private float yDelta;
+
+    private RectF tableRect;
+
+    public BallOnTouchListener(RelativeLayout parentLayout, RectF tableRect) {
         this.parentLayout = parentLayout;
+        this.tableRect = tableRect;
     }
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
-        final int X = (int) event.getRawX();
-        final int Y = (int) event.getRawY();
+        float x = event.getRawX();
+        float y = event.getRawY();
+
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                RelativeLayout.LayoutParams lParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
-                xDelta = X - lParams.leftMargin;
-                yDelta = Y - lParams.topMargin;
-                break;
-            case MotionEvent.ACTION_UP:
+                xDelta = x - view.getX();
+                yDelta = y - view.getY();
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 break;
             case MotionEvent.ACTION_MOVE:
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view
-                        .getLayoutParams();
-                layoutParams.leftMargin = X - xDelta;
-                layoutParams.topMargin = Y - yDelta;
-//                layoutParams.rightMargin = 250;
-//                layoutParams.bottomMargin = 250;
-                view.setLayoutParams(layoutParams);
+            case MotionEvent.ACTION_UP:
+                x -= xDelta;
+                y -= yDelta;
+
+                if (tableRect.contains(x, y)) {
+                    view.setX(x);
+                    view.setY(y);
+                    view.invalidate();
+                }
                 break;
         }
-        parentLayout.invalidate();
         return true;
     }
 }

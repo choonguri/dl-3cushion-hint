@@ -2,6 +2,8 @@ package choonguri.com.a3cushion;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.media.Image;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -47,14 +50,29 @@ public class MainActivity extends AppCompatActivity {
 
         table = (RelativeLayout) findViewById(R.id.table);
         table.setDrawingCacheEnabled(true);
-        ImageView redBall1 = (ImageView) findViewById(R.id.redBall1);
-        ImageView redBall2 = (ImageView) findViewById(R.id.redBall2);
-        ImageView whiteBall = (ImageView) findViewById(R.id.whiteBall);
         checkImage = (ImageView) findViewById(R.id.checkImage);
 
-        redBall1.setOnTouchListener(new BallOnTouchListener(table));
-        redBall2.setOnTouchListener(new BallOnTouchListener(table));
-        whiteBall.setOnTouchListener(new BallOnTouchListener(table));
+        table.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                table.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                ImageView redBall1 = (ImageView) findViewById(R.id.redBall1);
+                ImageView redBall2 = (ImageView) findViewById(R.id.redBall2);
+                ImageView whiteBall = (ImageView) findViewById(R.id.whiteBall);
+
+                Rect rect = new Rect();
+                table.getDrawingRect(rect);
+                rect.right -= redBall1.getWidth();
+                rect.bottom -= redBall1.getHeight();
+
+                BallOnTouchListener onTouchListener = new BallOnTouchListener(table, new RectF(rect));
+                redBall1.setOnTouchListener(onTouchListener);
+                redBall2.setOnTouchListener(onTouchListener);
+                whiteBall.setOnTouchListener(onTouchListener);
+                return false;
+            }
+        });
 
         WindowManager wManager=getWindowManager();
         Display display = wManager.getDefaultDisplay();
@@ -68,6 +86,15 @@ public class MainActivity extends AppCompatActivity {
 
         resultView = (TextView) findViewById(R.id.resultView);
         initTensorFlowAndLoadModel();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+
+
     }
 
     private void initTensorFlowAndLoadModel() {
